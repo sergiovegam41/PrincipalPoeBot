@@ -396,6 +396,40 @@ async function sendToApi(host, body, action = 'send') {
     throw error;
   }
 }
+
+app.get('/redirect-host', async function (req, res) {
+
+
+  res.redirect((await selectRamDomHostAvailable()).host);
+  // res.send({
+  //   success: true,
+  //   message: "OK",
+  //   data: {
+  //     host: 
+  //   }
+  // })
+
+});
+
+
+app.post('/get-host', async function (req, res) {
+
+  let token = req.body.token || ""
+
+  if (!hasAuthority(token)) return res.send({
+    success: false,
+    message: "UNAUTHORIZED",
+  })
+
+  res.send({
+    success: true,
+    message: "OK",
+    data: {
+      host: await selectRamDomHostAvailable()
+    }
+  })
+
+});
 async function selectRamDomHostAvailable() {
   const activeHosts = await ApisPoeClientAvailableCollection.find({ active: true }).toArray();
   const randomHost = activeHosts[Math.floor(Math.random() * activeHosts.length)];
@@ -404,7 +438,7 @@ async function selectRamDomHostAvailable() {
 
 
 async function pingToPoeClients() {
-  const activeHosts = await ApisPoeClientAvailableCollection.find({ active: true }).toArray();
+  const activeHosts = await ApisPoeClientAvailableCollection.find().toArray();
 
   for (let host of activeHosts) {
     try {

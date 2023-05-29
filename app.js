@@ -399,15 +399,8 @@ async function sendToApi(host, body, action = 'send') {
 
 app.get('/redirect-host', async function (req, res) {
 
-
   res.redirect((await selectRamDomHostAvailable()).host);
-  // res.send({
-  //   success: true,
-  //   message: "OK",
-  //   data: {
-  //     host: 
-  //   }
-  // })
+
 
 });
 

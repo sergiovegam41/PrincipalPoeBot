@@ -110,7 +110,7 @@ app.post('/send', async function (req, res) {
       const defaultPront = await DefaultsProntsCollection.findOne({ id: defaultProntID});
 
       let minutes = getMinutesSinceLastTime(user.lastTime)
-
+      console.log(minutes)
       if( changued || (minutes >= defaultPront.TimeOut ) || purge ){
         
         purge = true
@@ -119,10 +119,10 @@ app.post('/send', async function (req, res) {
 
       }
 
-
     }
 
     console.log("antes de sendMessageToApi")
+
     let body = {
       token: hostApi.auth,
       poeToken: poeToken == null ? user.poeToken : poeToken,
@@ -132,6 +132,7 @@ app.post('/send', async function (req, res) {
     }
 
     let reply = await sendToApi(hostApi.host, body)
+
 
     await UsersCollection.updateOne({ phone }, { $set: { lastTime: new Date(), useDetultPront, defaultProntID } });
     
@@ -157,6 +158,7 @@ app.post('/send', async function (req, res) {
 
 app.post('/purge', async function (req, res) {
 
+  let defaultProntID = req.body.defaultProntID || null
   let poeToken = req.body.poeToken || null
   let phone = req.body.phone || null
   let token = req.body.token || ""
@@ -174,6 +176,9 @@ app.post('/purge', async function (req, res) {
     success: false,
     message: "MESSAGE_IS_REQUIRED",
   })
+
+  let useDetultPront = defaultProntID == null? false: true
+
 
   const patronPhone = /^[0-9]{14}$/;
 
@@ -200,7 +205,22 @@ app.post('/purge', async function (req, res) {
       bot: bot
     }
     await sendToApi(hostApi.host, body, 'purge')
+
+    if(defaultProntID){
+
+      const defaultPront = await DefaultsProntsCollection.findOne({ id: defaultProntID});
+      var ahora = new Date();
+      ahora.setMinutes(ahora.getMinutes() - defaultPront.TimeOut);
+      var ISOstring = ahora;
+      await UsersCollection.updateOne({ phone }, { $set: { lastTime: ISOstring, useDetultPront, defaultProntID } });
+      let user = await searchOrCreateUserByPhone(phone)
+      // console.log(user)
+   
+    }
+
     
+
+    console.log("OK")
 
     // responder 
     res.send({
@@ -249,6 +269,7 @@ app.post('/get-history', async function (req, res) {
 
     console.log(hostApi.host)
     console.log("antes de sendMessageToApi")
+
     let body = {
       token: hostApi.auth,
       poeToken: poeToken == null ? user.poeToken : poeToken,
@@ -256,6 +277,7 @@ app.post('/get-history', async function (req, res) {
       purge: purge,
       bot: bot
     }
+
     let reply = await sendToApi(hostApi.host, body, 'get-history')
 
     // responder 
